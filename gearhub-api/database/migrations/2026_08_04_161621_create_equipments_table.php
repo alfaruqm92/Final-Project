@@ -1,0 +1,51 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('equipments', function (Blueprint $table) {
+            $table->id('id');
+
+            $table->foreignId('category_id')
+                  ->constrained('equipment_categories')
+                  ->cascadeOnUpdate()
+                  ->restrictOnDelete();
+
+            $table->string('brand', 100);
+            $table->string('model', 100);
+
+            $table->string('unit_number', 30)->unique();
+
+            $table->year('year');
+
+            $table->decimal('price_per_day', 12, 2);
+
+            $table->enum('status', [
+                'Available',
+                'Booked',
+                'Maintenance'
+            ])->default('Available');
+
+            $table->string('image')->nullable();
+
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('equipments');
+    }
+};
