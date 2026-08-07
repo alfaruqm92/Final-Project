@@ -5,12 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Models\Equipment;
+use carbon\Carbon;
 
 class BookingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $bookings = Booking::all();
@@ -21,37 +20,35 @@ class BookingController extends Controller
         ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
             'equipment_id' => 'required|exists:equipments,id',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after:start_date',
-            'total_price' => 'required|numeric|min:0',
+            'pickup_date' => 'required|date|after_or_equal:today',
+            'return_date' => 'required|date|after:pickup_date',
         ]);
 
-        $booking = Booking::create($validated);
+        $equipment = Equipment::findOrFail($validated['equipment_id']);
+
+        if ($equipment->status !== 'Available') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Equipment is not available for booking.',
+            ], 400);
+        }
+
+        $totalDays = Carbon::parse($validated['pickup_date'])
+            ->diffInDays(Carbon::parse($validated['return_date']));
+
 
         return response()->json([
             'success' => true,
             'message' => 'Booking created successfully',
+            'total_days' => $totalDays,
             'data' => $booking,
         ], 201);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Attention! Something must be filled in the form',
-            'errors' => $validator->errors(),
-        ], 422);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $booking = Booking::find($id);
@@ -70,9 +67,6 @@ class BookingController extends Controller
         ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $booking = Booking::find($id);
@@ -101,14 +95,11 @@ class BookingController extends Controller
         ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $booking = Booking::find($id);
 
-        if (!booking) {
+        if (!$booking) {
             return response()->json([
                 'success' => false,
                 'message' => 'Booking not Found!'
@@ -120,6 +111,20 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Booking deleted successfully'
+        ], 200);
+    }
+
+    public function myBookings(Request $request)
+    {
+        $bookings = Booking::where('user_id', $request->user()->id)
+        ->with(['equipment'])
+        ->latest()
+        ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'My bookings fetched successfully',
+            'data' => $bookings
         ], 200);
     }
 }

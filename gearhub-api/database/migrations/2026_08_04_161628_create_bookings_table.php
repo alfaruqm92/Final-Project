@@ -33,13 +33,13 @@ return new class extends Migration
             $table->decimal('total_price', 12, 2);
 
             $table->enum('status', [
-                'Pending',
-                'Approved',
-                'On Rent',
-                'Returned',
-                'Completed',
-                'Cancelled'
-            ])->default('Pending');
+                'pending',
+                'approved',
+                'on_rent',
+                'returned',
+                'completed',
+                'cancelled'
+            ])->default('pending');
 
             $table->timestamps();
         });
