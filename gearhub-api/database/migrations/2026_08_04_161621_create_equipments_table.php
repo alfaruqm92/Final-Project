@@ -29,10 +29,10 @@ return new class extends Migration
             $table->decimal('price_per_day', 12, 2);
 
             $table->enum('status', [
-                'Available',
-                'Booked',
-                'Maintenance'
-            ])->default('Available');
+                'available',
+                'booked',
+                'maintenance'
+            ])->default('available');
 
             $table->string('image')->nullable();
 

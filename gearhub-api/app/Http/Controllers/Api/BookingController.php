@@ -42,10 +42,7 @@ class BookingController extends Controller
 
 
         return response()->json([
-            'success' => true,
-            'message' => 'Booking created successfully',
             'total_days' => $totalDays,
-            'data' => $booking,
         ], 201);
     }
 
