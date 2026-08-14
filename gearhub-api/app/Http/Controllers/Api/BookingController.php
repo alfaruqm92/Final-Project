@@ -40,9 +40,22 @@ class BookingController extends Controller
         $totalDays = Carbon::parse($validated['pickup_date'])
             ->diffInDays(Carbon::parse($validated['return_date']));
 
+        $totalPrice = $equipment->price_per_day * $totalDays;
+
+        $booking = Booking::create([
+            'user_id' => $request->user()->id,
+            'equipment_id' => $validated['equipment_id'],
+            'pickup_date' => $validated['pickup_date'],
+            'return_date' => $validated['return_date'],
+            'total_days' => $totalDays,
+            'total_price' => $totalPrice,
+            'status' => 'Pending',
+        ]);
 
         return response()->json([
-            'total_days' => $totalDays,
+            'success' => true,
+            'message' => 'Booking created successfully',
+            'data' => $booking
         ], 201);
     }
 

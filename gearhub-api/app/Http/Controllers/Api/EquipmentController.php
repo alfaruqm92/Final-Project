@@ -8,9 +8,7 @@ use App\Models\Equipment;
 
 class EquipmentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         $equipments = Equipment::all();
@@ -21,9 +19,7 @@ class EquipmentController extends Controller
         ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -53,9 +49,7 @@ class EquipmentController extends Controller
         ], 422);
     }
 
-    /**
-     * Display the specified resource.
-     */
+
     public function show(string $id)
     {
         $equipment = Equipment::find($id);
