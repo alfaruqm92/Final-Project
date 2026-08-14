@@ -1,11 +1,11 @@
-import Button from "./components/atoms/Button/Button";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
-  return (
-    <div className="p-10">
-      <Button>Test Button</Button>
+  return(
+    <div className="scroll-smooth">
+      <AppRoutes />
     </div>
-  );
+  )
 }
 
 export default App;
