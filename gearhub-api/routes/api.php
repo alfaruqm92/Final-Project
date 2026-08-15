@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\EquipmentController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminDashboardController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,6 +25,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+
     Route::post('/categories', [EquipmentCategoryController::class, 'store']);
     Route::put('/categories/{category}', [EquipmentCategoryController::class, 'update']);
     Route::delete('/categories/{category}', [EquipmentCategoryController::class, 'destroy']);
