@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "../pages/public/Home";
-import Equipment from "../pages/public/EquipmentListing";
+import Equipment from "../pages/public/Equipment";
 
 function AppRoutes() {
   return (

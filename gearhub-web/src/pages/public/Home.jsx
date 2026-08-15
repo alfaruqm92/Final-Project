@@ -3,7 +3,7 @@ import HeroSection from "../../components/organisms/HeroSection";
 import EquipmentGrid from "../../components/organisms/EquipmentGrid";
 import FeatureSection from "../../components/organisms/FeatureSection";
 
-import Nikon from "../../assets/images/Nikon.jpg";
+import NikonZ6 from "../../assets/images/Nikon.jpg";
 import EosR6 from "../../assets/images/EOSR6.jpg";
 import SonyA7 from "../../assets/images/SonyA7.jpg";
 import FujifilmXT5 from "../../assets/images/FujifilmXT5.jpg";
@@ -40,7 +40,7 @@ const equipments = [
     model: "Z6 III",
     price_per_day: 350000,
     status: "Booked",
-    image: `${Nikon}`,
+    image: `${NikonZ6}`,
   },
 ];
 
@@ -51,12 +51,30 @@ function Home() {
 
   return (
     <PublicLayout>
-      <HeroSection image={Nikon} />
+      <HeroSection image={NikonZ6} />
 
-      <EquipmentGrid
-        equipments={equipments}
-        onEquipmentClick={handleEquipmentClick}
-      />
+      <section id="equipment" className="scroll-mt-20 bg-[#EAECF0] px-4 py-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6">
+            <p className="text-sm font-medium uppercase tracking-wider text-[#FE7F2D]">
+              Our Equipment
+            </p>
+
+            <h2 className="mt-1 text-2xl font-bold text-[#000000]">
+              Find the right gear
+            </h2>
+
+            <p className="mt-2 text-sm text-[#233D4D]/60">
+              Choose from our collection of professional photography equipment.
+            </p>
+          </div>
+
+          <EquipmentGrid
+            equipments={equipments}
+            onEquipmentClick={handleEquipmentClick}
+          />
+        </div>
+      </section>
 
       <FeatureSection />
     </PublicLayout>

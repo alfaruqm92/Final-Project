@@ -12,6 +12,7 @@ function SearchBar({ value, onChange, placeholder = "Search equipment..." }) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        className="pl-10"
       />
     </div>
   );
