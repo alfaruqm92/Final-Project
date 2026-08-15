@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import Equipment from "../pages/public/Equipment";
 import Dashboard from "../pages/user/Dashboard";
+import Register from "../pages/auth/Register";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
@@ -16,6 +17,7 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/equipment" element={<Equipment />} />
+      <Route path="/register" element={<Register />} />
 
       {/* Customer */}
       <Route element={<ProtectedRoute />}>

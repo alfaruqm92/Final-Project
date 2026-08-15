@@ -30,6 +30,9 @@ function Equipment() {
 
   const navigate = useNavigate();
   
+  const handleEquipmentClick = (equipment) => {
+    navigate(`/equipment/${equipment.id}`);
+  };
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -128,7 +131,7 @@ function Equipment() {
             {loading ? (
               <LoadingState />
             ) : filteredEquipments.length > 0 ? (
-              <EquipmentGrid equipments={filteredEquipments} />
+              <EquipmentGrid equipments={filteredEquipments} onEquipmentClick={handleEquipmentClick} />
             ) : (
               <EmptyState />
             )}
