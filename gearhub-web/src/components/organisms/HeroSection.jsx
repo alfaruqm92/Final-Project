@@ -6,7 +6,7 @@ function HeroSection({ image }) {
   const navigate = useNavigate();
 
   return (
-    <section className="relativeoverflow-hidden bg-[#233D4D] px-4 pb-10 pt-28 text-white md:px-8 md:pb-10 md:pt-28">
+    <section className="relative overflow-hidden bg-[#233D4D] px-4 pb-10 pt-28 text-white md:px-8 md:pb-10 md:pt-28">
       {/* Decorative Circle */}
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#FE7F2D]/10" />
 

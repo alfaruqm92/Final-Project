@@ -10,16 +10,15 @@ use App\Models\Equipment;
 class EquipmentController extends Controller
 {
 
-    public function index()
-    {
-        $equipments = Equipment::all();
+    public function index(){
+        $equipments = Equipment::with('category')->get();
 
         $equipments->transform(function ($equipment) {
             $equipment->image = $equipment->image
                 ? url(Storage::url('equipments/' . $equipment->image))
                 : null;
 
-                return $equipment;
+            return $equipment;
         });
 
         return response()->json([
@@ -29,7 +28,6 @@ class EquipmentController extends Controller
         ], 200);
     }
 
-
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -38,11 +36,17 @@ class EquipmentController extends Controller
             'unit_number' => 'required|string|max:50|unique:equipments,unit_number',
             'year' => 'required|integer|min:1900|max:' . date('Y'),
             'price_per_day' => 'required|numeric|min:0',
-            'status' => 'required|in:Available,Booked,Maintenance',
-            'image' => 'nullable|string',
+            'status' => 'required|in:available,booked,maintenance',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:equipment_categories,id',
         ]);
+
+        if ($request->hasFile('image')) {
+            $filename = $request->file('image')->store('equipments', 'public');
+
+            $validated['image'] = basename($filename);
+        }
 
         $equipment = Equipment::create($validated);
 
@@ -51,12 +55,6 @@ class EquipmentController extends Controller
             'message' => 'Equipment created successfully',
             'data' => $equipment,
         ], 201);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Something must be filled in the form',
-            'errors' => $validator->errors(),
-        ], 422);
     }
 
 
@@ -98,11 +96,29 @@ class EquipmentController extends Controller
             'unit_number' => 'sometimes|required|string|max:50|unique:equipments,unit_number,' . $id,
             'year' => 'sometimes|required|integer|min:1900|max:' . date('Y'),
             'price_per_day' => 'sometimes|required|numeric|min:0',
-            'status' => 'sometimes|required|in:Available,Booked,Maintenance',
-            'image' => 'nullable|string',
+            'status' => 'sometimes|required|in:available,booked,maintenance',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'description' => 'nullable|string',
             'category_id' => 'sometimes|required|exists:equipment_categories,id',
         ]);
+
+        if ($request->hasFile('image')) {
+
+            // Delete old image
+            if ($equipment->image) {
+                Storage::disk('public')->delete(
+                    'equipments/' . $equipment->image
+                );
+            }
+
+            // Upload new image
+            $filename = $request->file('image')->store(
+                'equipments',
+                'public'
+            );
+
+            $validated['image'] = basename($filename);
+        }
 
         $equipment->update($validated);
 
@@ -125,6 +141,12 @@ class EquipmentController extends Controller
                 'success' => false,
                 'message' => 'Equipment not found',
             ], 404);
+        }
+
+        if ($equipment->image) {
+            Storage::disk('public')->delete(
+                'equipments/' . $equipment->image
+            );
         }
 
         $equipment->delete();

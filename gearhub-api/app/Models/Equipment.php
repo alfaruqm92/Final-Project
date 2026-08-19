@@ -24,7 +24,7 @@ class Equipment extends Model
 
     public function category()
     {
-        return $this->belongsTo(EquipmentCategory::class, 'category_id', 'category_id');
+        return $this->belongsTo(EquipmentCategory::class, 'category_id', 'id');
     }
 
     public function bookings()
@@ -32,7 +32,7 @@ class Equipment extends Model
         return $this->hasMany(
             Booking::class,
             'equipment_id',
-            'equipment_id'
+            'id'
         );
     }
 

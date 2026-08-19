@@ -48,7 +48,7 @@ function Equipment() {
 
     const matchesCategory =
       category === "All" ||
-      equipment.category.toLowerCase() === category.toLowerCase();
+      equipment.category?.name?.toLowerCase() === category.toLowerCase();
 
     return matchesSearch && matchesCategory;
   });

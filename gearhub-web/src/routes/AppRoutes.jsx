@@ -8,6 +8,8 @@ import Register from "../pages/auth/Register";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminEquipments from "../pages/admin/AdminEquipments";
+import AdminCategories from "../pages/admin/AdminCategories";
 import Home from "../pages/public/Home";
 
 function AppRoutes() {
@@ -27,6 +29,8 @@ function AppRoutes() {
       {/* Admin */}
       <Route element={<AdminRoute />}>
         <Route path="/admin/dashboard" element={<AdminDashboard />}/>
+        <Route path="/admin/equipments" element={<AdminEquipments />}/>
+        <Route path="/admin/categories" element={<AdminCategories />}/>
       </Route>
     </Routes>
   );

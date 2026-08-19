@@ -2,6 +2,36 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import apiClient from "../../services/api/client";
 import LoadingState from "../../components/molecules/LoadingState";
+import DashboardLayout from "../../components/templates/DashboardLayout";
+
+
+const adminMenu = [
+  {
+    label: "Home",
+    path: "/",
+    icon: "home",
+  },
+  {
+    label: "Dashboard",
+    path: "/admin/dashboard",
+    icon: "dashboard",
+  },
+  {
+    label: "Equipment",
+    path: "/admin/equipments",
+    icon: "camera",
+  },
+  {
+    label: "Categories",
+    path: "/admin/categories",
+    icon: "folder",
+  },
+  {
+    label: "Bookings",
+    path: "/admin/bookings",
+    icon: "calendar",
+  }
+];
 
 function AdminDashboard() {
   const { user } = useAuth();
@@ -30,63 +60,65 @@ function AdminDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[#EAECF0] px-4 py-10 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <p className="text-sm font-medium uppercase tracking-wider text-[#FE7F2D]">
-          Admin Dashboard
-        </p>
+    <DashboardLayout menuItems={adminMenu}>
+      <div className="px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-medium uppercase tracking-wider text-[#FE7F2D]">
+            Admin Dashboard
+          </p>
 
-        <h1 className="mt-2 text-3xl font-bold text-[#000000]">
-          Welcome, {user?.name}
-        </h1>
+          <h1 className="mt-2 text-3xl font-bold text-[#000000]">
+            Welcome, {user?.name}
+          </h1>
 
-        <p className="mt-2 text-sm text-[#233D4D]/60">
-          Manage GearHub equipment and rental operations.
-        </p>
+          <p className="mt-2 text-sm text-[#233D4D]/60">
+            Manage GearHub equipment and rental operations.
+          </p>
 
-        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-[#233D4D]/60">
-              Total Equipment
-            </p>
+          <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm text-[#233D4D]/60">
+                Total Equipment
+              </p>
 
-            <p className="mt-2 text-3xl font-bold text-[#233D4D]">
-              {stats?.total_equipment ?? 0}
-            </p>
-          </div>
+              <p className="mt-2 text-3xl font-bold text-[#233D4D]">
+                {stats?.total_equipment ?? 0}
+              </p>
+            </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-[#233D4D]/60">
-              Available
-            </p>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm text-[#233D4D]/60">
+                Available
+              </p>
 
-            <p className="mt-2 text-3xl font-bold text-[#233D4D]">
-              {stats?.available_equipment ?? 0}
-            </p>
-          </div>
+              <p className="mt-2 text-3xl font-bold text-[#233D4D]">
+                {stats?.available_equipment ?? 0}
+              </p>
+            </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-[#233D4D]/60">
-              Booked
-            </p>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm text-[#233D4D]/60">
+                Booked
+              </p>
 
-            <p className="mt-2 text-3xl font-bold text-[#233D4D]">
-              {stats?.booked_equipment ?? 0}
-            </p>
-          </div>
+              <p className="mt-2 text-3xl font-bold text-[#233D4D]">
+                {stats?.booked_equipment ?? 0}
+              </p>
+            </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-[#233D4D]/60">
-              Maintenance
-            </p>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm text-[#233D4D]/60">
+                Maintenance
+              </p>
 
-            <p className="mt-2 text-3xl font-bold text-[#233D4D]">
-              {stats?.maintenance_equipment ?? 0}
-            </p>
+              <p className="mt-2 text-3xl font-bold text-[#233D4D]">
+                {stats?.maintenance_equipment ?? 0}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </main>
+    </DashboardLayout>
   );
 }
 

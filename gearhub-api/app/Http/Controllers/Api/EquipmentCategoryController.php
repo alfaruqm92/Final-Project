@@ -37,12 +37,6 @@ class EquipmentCategoryController extends Controller
             'message' => 'Category created successfully',
             'data' => $category,
         ], 201);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Name must be filled in the form or unique',
-            'errors' => $validator->errors(),
-        ], 422);
     }
 
     /**
