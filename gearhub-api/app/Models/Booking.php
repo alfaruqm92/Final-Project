@@ -26,15 +26,11 @@ class Booking extends Model
 
     public function equipment()
     {
-        return $this->belongsTo(Equipment::class, 'equipment_id', 'equipment_id');
+        return $this->belongsTo(Equipment::class);
     }
 
     public function payment()
     {
-        return $this->hasOne(
-            Payment::class,
-            'booking_id',
-            'booking_id'
-        );
+        return $this->hasOne(Payment::class);
     }
 }

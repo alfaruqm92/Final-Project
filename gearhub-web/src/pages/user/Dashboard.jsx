@@ -1,6 +1,7 @@
 import { useAuth } from "../../contexts/AuthContext";
 import DashboardLayout from "../../components/templates/DashboardLayout";
 
+
 const customerMenu = [
   {
     label: "Home",
@@ -26,9 +27,10 @@ const customerMenu = [
 
 function Dashboard() {
   const { user } = useAuth();
+  
 
   return (
-    <DashboardLayout menuItems={customerMenu}>
+    <DashboardLayout menuItems={customerMenu} showCart={true}>
       <div className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-medium uppercase tracking-wider text-[#FE7F2D]">

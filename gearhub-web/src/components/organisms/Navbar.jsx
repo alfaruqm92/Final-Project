@@ -1,13 +1,24 @@
 import Logo from "../atoms/Logo";
 import Icon from "../atoms/Icon";
 import { useAuth } from "../../contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 function Navbar({ onMenuClick, isMenuOpen}) {
   const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/";
+  };
+
+   const handleCartClick = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    navigate("/cart");
   };
 
   return (
@@ -19,40 +30,40 @@ function Navbar({ onMenuClick, isMenuOpen}) {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 lg:flex">
-          <a href="#" className="text-sm font-medium text-[#233D4D] transition-colors hover:text-[#FE7F2D]"
+          <Link to="#" className="text-sm font-medium text-[#233D4D] transition-colors hover:text-[#FE7F2D]"
           >
             Home
-          </a>
+          </Link>
 
-          <a href="/equipment" className="text-sm font-medium text-[#233D4D]/70 transition-colors hover:text-[#FE7F2D]">
+          <Link to="/equipment" className="text-sm font-medium text-[#233D4D]/70 transition-colors hover:text-[#FE7F2D]">
             Equipment
-          </a>
+          </Link>
 
-          <a
-            href="#features"
+          <Link
+            to="#features"
             className="text-sm font-medium text-[#233D4D]/70 transition-colors hover:text-[#FE7F2D]"
           >
             Why GearHub
-          </a>
+          </Link>
 
-          <a
-            href="#"
+          <Link
+            to="#"
             className="text-sm font-medium text-[#233D4D]/70 transition-colors hover:text-[#FE7F2D]"
           >
             Contact
-          </a>
+          </Link>
         </nav>
 
         {/* Desktop Login */}
         <div className="hidden items-center gap-2 lg:flex">
           {isAuthenticated ? (
             <>
-              <a
-                href={user?.role === "admin" ? "/admin/dashboard" : "/dashboard"}
+              <Link
+                to={user?.role === "admin" ? "/admin/dashboard" : "/dashboard"}
                 className="rounded-full px-4 py-2 text-sm font-medium text-[#233D4D] transition-colors hover:bg-[#EAECF0]"
               >
                 Dashboard
-              </a>
+              </Link>
 
               <button
                 type="button"
@@ -63,12 +74,12 @@ function Navbar({ onMenuClick, isMenuOpen}) {
               </button>
             </>
           ) : (
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="rounded-full bg-[#233D4D] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#FE7F2D]"
             >
               Login
-            </a>
+            </Link>
           )}
         </div>
 

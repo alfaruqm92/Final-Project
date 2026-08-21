@@ -1,4 +1,4 @@
-import {Search, Bell, Settings, User, Home, Camera, Calendar, CreditCard, LayoutDashboard, LogOut, ChevronDown, Menu, CircleArrowLeft, SearchX, X} from "lucide-react";
+import {Search, Bell, Settings, User, Home, Camera, Calendar, CreditCard, LayoutDashboard, LogOut, ChevronDown, Menu, CircleArrowLeft, SearchX, X, ShoppingCart} from "lucide-react";
 
 const icons = {
   search: Search, 
@@ -16,6 +16,7 @@ const icons = {
   circlearrowleft: CircleArrowLeft,
   searchx: SearchX,
   close: X,
+  cart: ShoppingCart
 };
 
 function Icon({ name, size = 20, strokeWidth = 1.8 }) {

@@ -9,17 +9,12 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminDashboardController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 Route::get('/categories', [EquipmentCategoryController::class, 'index']);
 Route::get('/categories/{category}', [EquipmentCategoryController::class, 'show']);
 
 Route::get('/equipments', [EquipmentController::class, 'index']);
 Route::get('/equipments/{equipment}', [EquipmentController::class, 'show']);
-
-Route::apiResource('/payments', PaymentController::class);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);

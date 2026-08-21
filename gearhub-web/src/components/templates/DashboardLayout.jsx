@@ -2,21 +2,25 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import Icon from "../atoms/Icon";
+import { useCart } from "../../contexts/CartContext";
+import CartDrawer from "../organisms/CartDrawer";
 
-function DashboardLayout({ children, menuItems = [] }) {
+function DashboardLayout({ children, menuItems = [], showCart = false }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  
   const { user, logout } = useAuth();
+  const { cartItems } = useCart();
+
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const handleLogout = async () => { 
     await logout();
     navigate("/");
   };
 
   return (
     <div className="min-h-screen bg-[#EAECF0]">
-      {/* Mobile Header */}
       <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-[#EAECF0] bg-white px-4 shadow-sm lg:hidden">
         <Link
           to="/"
@@ -25,16 +29,37 @@ function DashboardLayout({ children, menuItems = [] }) {
           Gear<span className="text-[#FE7F2D]">Hub</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={() => setIsSidebarOpen((prev) => !prev)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-[#EAECF0] text-[#233D4D] transition hover:border-[#FE7F2D] hover:bg-[#FE7F2D] hover:text-white"
-        >
-          <Icon
-            name={isSidebarOpen ? "close" : "menu"}
-            size={20}
-          />
-        </button>
+        {/* Cart + Menu */}
+        <div className="flex items-center gap-2">
+          {showCart && (
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#EAECF0] text-[#233D4D] transition hover:border-[#FE7F2D] hover:bg-[#FE7F2D] hover:text-white"
+              aria-label="Open cart"
+            >
+              <Icon name="cart" size={20} />
+
+              {cartItems.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FE7F2D] px-1 text-[10px] font-bold text-white">
+                  {cartItems.length}
+                </span>
+              )}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            aria-label="Open menu"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#EAECF0] text-[#233D4D] transition hover:border-[#FE7F2D] hover:bg-[#FE7F2D] hover:text-white"
+          >
+            <Icon
+              name={isSidebarOpen ? "close" : "menu"}
+              size={20}
+            />
+          </button>
+        </div>
       </header>
 
       {/* Overlay Mobile */}
@@ -79,8 +104,28 @@ function DashboardLayout({ children, menuItems = [] }) {
           </p>
         </div>
 
-        {/* Navigation */}
         <nav className="mt-8 space-y-2">
+          {showCart && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsCartOpen(true);
+                setIsSidebarOpen(false);
+              }}
+              className="relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Icon name="cart" size={18} />
+
+              <span>Cart</span>
+
+              {cartItems.length > 0 && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FE7F2D] px-1 text-[10px] font-bold text-white">
+                  {cartItems.length}
+                </span>
+              )}
+            </button>
+          )}
+
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -110,10 +155,16 @@ function DashboardLayout({ children, menuItems = [] }) {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="min-h-screen pt-16 lg:ml-64 lg:pt-0">
         {children}
       </main>
+
+      {showCart && (
+        <CartDrawer
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+        />
+      )}
     </div>
   );
 }

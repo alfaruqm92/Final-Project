@@ -60,7 +60,7 @@ class EquipmentController extends Controller
 
     public function show(string $id)
     {
-        $equipment = Equipment::find($id);
+        $equipment = Equipment::with('category')->find($id);
 
         if (!$equipment) {
             return response()->json([
@@ -68,6 +68,10 @@ class EquipmentController extends Controller
                 'message' => 'Equipment not found',
             ], 404);
         }
+
+        $equipment->image = $equipment->image
+        ? url(Storage::url('equipments/' . $equipment->image))
+        : null;
 
         return response()->json([
             'success' => true,

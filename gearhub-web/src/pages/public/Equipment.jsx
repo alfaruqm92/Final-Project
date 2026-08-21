@@ -6,6 +6,7 @@ import Icon from "../../components/atoms/Icon";
 import EmptyState from "../../components/molecules/EmptyState";
 import apiClient from "../../services/api/client";
 import LoadingState from "../../components/molecules/LoadingState";
+import PublicLayout from "../../components/templates/PublicLayout";
 
 const categories = [
   {
@@ -74,12 +75,15 @@ function Equipment() {
   
 
   return (
-    <div className="min-h-screen bg-[#EAECF0]">
+    <PublicLayout>
       <section className="px-4 pb-12 pt-28 md:px-8 md:pt-32">
         <div className="mx-auto max-w-7xl">
 
-          <button type="button" onClick={() => navigate("/")}
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#233D4D] transition-colors hover:text-[#FE7F2D]">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#233D4D] transition-colors hover:text-[#FE7F2D]"
+          >
             <Icon name="circlearrowleft" size={16} />
             Back to Home
           </button>
@@ -131,7 +135,10 @@ function Equipment() {
             {loading ? (
               <LoadingState />
             ) : filteredEquipments.length > 0 ? (
-              <EquipmentGrid equipments={filteredEquipments} onEquipmentClick={handleEquipmentClick} />
+              <EquipmentGrid
+                equipments={filteredEquipments}
+                onEquipmentClick={handleEquipmentClick}
+              />
             ) : (
               <EmptyState />
             )}
@@ -139,7 +146,7 @@ function Equipment() {
 
         </div>
       </section>
-    </div>
+    </PublicLayout>
   );
 }
 
