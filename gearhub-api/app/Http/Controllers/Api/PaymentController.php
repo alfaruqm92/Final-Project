@@ -134,9 +134,7 @@ class PaymentController extends Controller
         ], 422);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(string $id)
     {
         $payment = Payment::find($id);

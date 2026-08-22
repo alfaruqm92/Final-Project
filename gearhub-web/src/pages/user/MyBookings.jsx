@@ -35,6 +35,7 @@ function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -59,6 +60,33 @@ function MyBookings() {
 
     fetchBookings();
   }, []);
+
+  const handlePayment = async (bookingId) => {
+  try {
+    setPaymentLoading(bookingId);
+    setError("");
+
+    const response = await apiClient.post("/payments", {
+      booking_id: bookingId,
+    });
+
+    console.log(response.data);
+
+    const snapToken = response.data.data.snap_token;
+
+    console.log("Snap Token:", snapToken);
+
+  } catch (error) {
+    console.error("Failed to create payment:", error);
+
+    setError(
+      error.response?.data?.message ||
+      "Failed to create payment. Please try again."
+    );
+  } finally {
+    setPaymentLoading(null);
+  }
+};
 
   return (
     <DashboardLayout menuItems={customerMenu} showCart={true}>
@@ -189,7 +217,8 @@ function MyBookings() {
                     </div>
 
                     {/* Action */}
-                    <div className="border-t border-[#233D4D]/10 px-4 py-3">
+                    {/* Action */}
+                    <div className="flex items-center justify-between border-t border-[#233D4D]/10 px-4 py-3">
                       <button
                         type="button"
                         onClick={() =>
@@ -199,6 +228,19 @@ function MyBookings() {
                       >
                         View Equipment →
                       </button>
+
+                      {booking.status === "pending" && (
+                        <button
+                          type="button"
+                          onClick={() => handlePayment(booking.id)}
+                          disabled={paymentLoading === booking.id}
+                          className="rounded-xl bg-[#FE7F2D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {paymentLoading === booking.id
+                            ? "Processing..."
+                            : "Pay Now"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

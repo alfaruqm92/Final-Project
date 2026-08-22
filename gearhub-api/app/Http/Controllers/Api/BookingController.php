@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Equipment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -24,67 +25,25 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'equipment_id' => 'required|exists:equipments,id',
+            'equipment_ids' => 'required|array|min:1',
+            'equipment_ids.*' => 'required|exists:equipments,id',
             'pickup_date' => 'required|date|after_or_equal:today',
             'return_date' => 'required|date|after:pickup_date',
         ]);
 
-        $equipment = Equipment::findOrFail(
-            $validated['equipment_id']
-        );
+        $equipments = Equipment::whereIn(
+            'id',
+            $validated['equipment_ids']
+        )->get();
 
+        $unavailableEquipment = $equipments->first(function ($equipment) {
+            return strtolower($equipment->status) !== 'available';
+        });
 
-        if (strtolower($equipment->status) !== 'available') {
+        if ($unavailableEquipment) {
             return response()->json([
                 'success' => false,
-                'message' => 'Equipment is not available for booking.',
-            ], 400);
-        }
-
-
-        $hasConflict = Booking::where(
-            'equipment_id',
-            $validated['equipment_id']
-        )
-            ->whereIn('status', [
-                'pending',
-                'approved',
-                'on_rent',
-            ])
-            ->where(function ($query) use ($validated) {
-                $query->whereBetween(
-                    'pickup_date',
-                    [
-                        $validated['pickup_date'],
-                        $validated['return_date'],
-                    ]
-                )
-                ->orWhereBetween(
-                    'return_date',
-                    [
-                        $validated['pickup_date'],
-                        $validated['return_date'],
-                    ]
-                )
-                ->orWhere(function ($query) use ($validated) {
-                    $query->where(
-                        'pickup_date',
-                        '<=',
-                        $validated['pickup_date']
-                    )
-                    ->where(
-                        'return_date',
-                        '>=',
-                        $validated['return_date']
-                    );
-                });
-            })
-            ->exists();
-
-        if ($hasConflict) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Equipment is already booked for the selected dates.',
+                'message' => "{$unavailableEquipment->brand} {$unavailableEquipment->model} is not available for booking.",
             ], 422);
         }
 
@@ -94,23 +53,81 @@ class BookingController extends Controller
             Carbon::parse($validated['return_date'])
         );
 
-        $totalPrice =
-            $equipment->price_per_day * $totalDays;
+        foreach ($equipments as $equipment) {
+            $hasConflict = Booking::where(
+                'equipment_id',
+                $equipment->id
+            )
+                ->whereIn('status', [
+                    'pending',
+                    'approved',
+                    'on_rent',
+                ])
+                ->where(function ($query) use ($validated) {
+                    $query->whereBetween(
+                        'pickup_date',
+                        [
+                            $validated['pickup_date'],
+                            $validated['return_date'],
+                        ]
+                    )
+                    ->orWhereBetween(
+                        'return_date',
+                        [
+                            $validated['pickup_date'],
+                            $validated['return_date'],
+                        ]
+                    )
+                    ->orWhere(function ($query) use ($validated) {
+                        $query->where(
+                            'pickup_date',
+                            '<=',
+                            $validated['pickup_date']
+                        )
+                        ->where(
+                            'return_date',
+                            '>=',
+                            $validated['return_date']
+                        );
+                    });
+                })
+                ->exists();
 
-        $booking = Booking::create([
-            'user_id' => $request->user()->id,
-            'equipment_id' => $equipment->id,
-            'pickup_date' => $validated['pickup_date'],
-            'return_date' => $validated['return_date'],
-            'total_days' => $totalDays,
-            'total_price' => $totalPrice,
-            'status' => 'pending',
-        ]);
+            if ($hasConflict) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$equipment->brand} {$equipment->model} is already booked for the selected dates.",
+                ], 422);
+            }
+        }
+
+        $bookings = DB::transaction(function () use (
+            $request,
+            $equipments,
+            $validated,
+            $totalDays
+        ) {
+            return $equipments->map(function ($equipment) use (
+                $request,
+                $validated,
+                $totalDays
+            ) {
+                return Booking::create([
+                    'user_id' => $request->user()->id,
+                    'equipment_id' => $equipment->id,
+                    'pickup_date' => $validated['pickup_date'],
+                    'return_date' => $validated['return_date'],
+                    'total_days' => $totalDays,
+                    'total_price' => $equipment->price_per_day * $totalDays,
+                    'status' => 'pending',
+                ]);
+            });
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Booking created successfully',
-            'data' => $booking,
+            'message' => 'Bookings created successfully',
+            'data' => $bookings,
         ], 201);
     }
 

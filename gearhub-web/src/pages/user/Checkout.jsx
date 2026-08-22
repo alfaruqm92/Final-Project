@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import apiClient from "../../services/api/client";
 
 import { useCart } from "../../contexts/CartContext";
 import DashboardLayout from "../../components/templates/DashboardLayout";
@@ -29,10 +30,12 @@ const customerMenu = [
 
 function Checkout() {
   const navigate = useNavigate();
-  const { cartItems } = useCart();
+  const { cartItems, clearCart } = useCart();
 
   const [pickupDate, setPickupDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const totalDays = useMemo(() => {
     if (!pickupDate || !returnDate) return 0;
@@ -53,6 +56,38 @@ function Checkout() {
   );
 
   const totalPrice = totalPerDay * totalDays;
+
+  const handleCheckout = async () => {
+    if (!pickupDate || !returnDate || totalDays <= 0) {
+      return;
+    }
+
+    try {
+      setCheckoutLoading(true);
+      setCheckoutError("");
+
+      const response = await apiClient.post("/bookings", {
+        equipment_ids: cartItems.map((item) => item.id),
+        pickup_date: pickupDate,
+        return_date: returnDate,
+      });
+
+      console.log("Bookings created:", response.data);
+
+      clearCart();
+
+      navigate("/my-bookings");
+    } catch (error) {
+      console.error("Checkout failed:", error);
+
+      setCheckoutError(
+        error.response?.data?.message ||
+        "Failed to create booking. Please try again."
+      );
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -232,14 +267,28 @@ function Checkout() {
                   </div>
                 </div>
               </div>
+              
+              {checkoutError && (
+                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {checkoutError}
+                </div>
+              )}      
 
               <button
-                type="button"
-                disabled={!pickupDate || !returnDate || totalDays <= 0}
-                className="mt-6 w-full rounded-xl bg-[#FE7F2D] px-5 py-4 font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:bg-[#233D4D]/30"
-              >
-                Proceed to Payment
-              </button>
+              type="button"
+              onClick={handleCheckout}
+              disabled={
+                checkoutLoading ||
+                !pickupDate ||
+                !returnDate ||
+                totalDays <= 0
+              }
+              className="mt-6 flex w-full items-center justify-center rounded-xl bg-[#FE7F2D] px-5 py-4 font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:bg-[#233D4D]/30"
+            >
+              {checkoutLoading
+                ? "Creating Booking..."
+                : "Proceed to Payment"}
+            </button>
             </aside>
           </div>
         </div>
