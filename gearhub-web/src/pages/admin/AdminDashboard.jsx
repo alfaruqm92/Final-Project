@@ -4,13 +4,7 @@ import apiClient from "../../services/api/client";
 import LoadingState from "../../components/molecules/LoadingState";
 import DashboardLayout from "../../components/templates/DashboardLayout";
 
-
 const adminMenu = [
-  {
-    label: "Home",
-    path: "/",
-    icon: "home",
-  },
   {
     label: "Dashboard",
     path: "/admin/dashboard",
@@ -24,13 +18,13 @@ const adminMenu = [
   {
     label: "Categories",
     path: "/admin/categories",
-    icon: "folder",
+    icon: "category",
   },
   {
     label: "Bookings",
     path: "/admin/bookings",
     icon: "calendar",
-  }
+  },
 ];
 
 function AdminDashboard() {

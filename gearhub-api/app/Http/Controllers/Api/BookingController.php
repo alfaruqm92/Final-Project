@@ -14,7 +14,10 @@ class BookingController extends Controller
 {
     public function index()
     {
-        $bookings = Booking::all();
+        $bookings = Booking::with([
+            'user',
+            'equipment.category',
+        ])->get();
         return response()->json([
             'success' => true,
             'message' => 'Bookings fetched successfully',
@@ -196,7 +199,11 @@ class BookingController extends Controller
 
     public function myBookings(Request $request)
     {
-        $bookings = Booking::where('user_id', $request->user()->id)
+        $bookings = Booking::where(
+            'user_id',
+            $request->user()->id
+        )
+            ->where('status', '!=', 'cancelled')
             ->with(['equipment.category'])
             ->latest()
             ->get();
@@ -217,6 +224,35 @@ class BookingController extends Controller
             'success' => true,
             'message' => 'My bookings fetched successfully',
             'data' => $bookings
+        ], 200);
+    }
+
+    public function cancel(Request $request, Booking $booking)
+    {
+        // Pastikan booking milik user yang sedang login
+        if ($booking->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to cancel this booking.',
+            ], 403);
+        }
+
+        // Untuk sementara hanya booking pending yang bisa dibatalkan
+        if ($booking->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only pending bookings can be cancelled.',
+            ], 422);
+        }
+
+        $booking->update([
+            'status' => 'cancelled',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking cancelled successfully.',
+            'data' => $booking,
         ], 200);
     }
 }

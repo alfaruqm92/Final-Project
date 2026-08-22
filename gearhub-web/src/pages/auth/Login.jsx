@@ -4,7 +4,6 @@ function Login() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#EAECF0] px-4 py-10">
       <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-lg md:p-8">
-
         {/* Header */}
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#FE7F2D]">

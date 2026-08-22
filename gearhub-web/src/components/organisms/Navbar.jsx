@@ -3,22 +3,13 @@ import Icon from "../atoms/Icon";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
-function Navbar({ onMenuClick, isMenuOpen}) {
+function Navbar({ onMenuClick, isMenuOpen, onLoginClick }) {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = "/";
-  };
-
-   const handleCartClick = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    navigate("/cart");
+    navigate("/", { replace: true });
   };
 
   return (
@@ -74,12 +65,13 @@ function Navbar({ onMenuClick, isMenuOpen}) {
               </button>
             </>
           ) : (
-            <Link
-              to="/login"
+            <button
+              type="button"
+              onClick={() => onLoginClick?.()}
               className="rounded-full bg-[#233D4D] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#FE7F2D]"
             >
               Login
-            </Link>
+            </button>
           )}
         </div>
 

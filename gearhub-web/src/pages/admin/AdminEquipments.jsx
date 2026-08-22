@@ -6,31 +6,26 @@ import EquipmentForm from "../../components/organisms/EquipmentForm";
 import Toast from "../../components/molecules/Toast";
 
 const adminMenu = [
-    {
-        label: "Home",
-        path: "/",
-        icon: "home",
-    },
-    {
-        label: "Dashboard",
-        path: "/admin/dashboard",
-        icon: "dashboard",
-    },
-    {
-        label: "Equipment",
-        path: "/admin/equipments",
-        icon: "camera",
-    },
-    {
-        label: "Categories",
-        path: "/admin/categories",
-        icon: "folder",
-    },
-    {
-        label: "Bookings",
-        path: "/admin/bookings",
-        icon: "calendar",
-    }
+  {
+    label: "Dashboard",
+    path: "/admin/dashboard",
+    icon: "dashboard",
+  },
+  {
+    label: "Equipment",
+    path: "/admin/equipments",
+    icon: "camera",
+  },
+  {
+    label: "Categories",
+    path: "/admin/categories",
+    icon: "category",
+  },
+  {
+    label: "Bookings",
+    path: "/admin/bookings",
+    icon: "calendar",
+  },
 ];
 
 const delay = (ms) =>

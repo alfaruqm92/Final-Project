@@ -5,7 +5,7 @@ import Icon from "../atoms/Icon";
 import { useCart } from "../../contexts/CartContext";
 import CartDrawer from "../organisms/CartDrawer";
 
-function DashboardLayout({ children, menuItems = [], showCart = false }) {
+function DashboardLayout({ children, menuItems = [], showCart = true }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
@@ -16,7 +16,7 @@ function DashboardLayout({ children, menuItems = [], showCart = false }) {
 
   const handleLogout = async () => { 
     await logout();
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   return (

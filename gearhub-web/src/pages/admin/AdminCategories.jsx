@@ -6,11 +6,6 @@ import Toast from "../../components/molecules/Toast";
 
 const adminMenu = [
   {
-    label: "Home",
-    path: "/",
-    icon: "home",
-  },
-  {
     label: "Dashboard",
     path: "/admin/dashboard",
     icon: "dashboard",
@@ -23,7 +18,7 @@ const adminMenu = [
   {
     label: "Categories",
     path: "/admin/categories",
-    icon: "folder",
+    icon: "category",
   },
   {
     label: "Bookings",

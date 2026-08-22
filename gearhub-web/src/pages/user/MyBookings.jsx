@@ -5,6 +5,7 @@ import DashboardLayout from "../../components/templates/DashboardLayout";
 import apiClient from "../../services/api/client";
 import LoadingState from "../../components/molecules/LoadingState";
 import EmptyState from "../../components/molecules/EmptyState";
+import Swal from "sweetalert2";
 
 const customerMenu = [
   {
@@ -81,24 +82,63 @@ function MyBookings() {
     }
 
     window.snap.pay(snapToken, {
-      onSuccess: function (result) {
+      onSuccess: async function (result) {
         console.log("Payment success:", result);
 
-        alert("Payment successful!");
+        await Swal.fire({
+        icon: "success",
+        title: "Payment successful!",
+        text: "Your payment has been completed successfully.",
+        confirmButtonText: "View My Bookings",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-3xl p-8",
+          title: "text-2xl font-bold text-[#233D4D]",
+          htmlContainer: "text-sm text-[#233D4D]/60",
+          confirmButton:
+            "rounded-xl bg-[#FE7F2D] px-6 py-3 font-semibold text-white transition hover:bg-[#233D4D]",
+        },
+      });
 
-        navigate("/my-bookings");
+        window.location.reload();
       },
 
       onPending: function (result) {
         console.log("Payment pending:", result);
 
-        alert("Payment is pending. Please complete your payment.");
+        Swal.fire({
+          icon: "info",
+          title: "Payment pending",
+          text: "Your payment is still waiting to be completed.",
+          confirmButtonText: "Okay",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-3xl p-8",
+            title: "text-2xl font-bold text-[#233D4D]",
+            htmlContainer: "text-sm text-[#233D4D]/60",
+            confirmButton:
+              "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
+          },
+        });
       },
 
       onError: function (result) {
         console.error("Payment error:", result);
 
-        alert("Payment failed. Please try again.");
+        Swal.fire({
+          icon: "error",
+          title: "Payment failed",
+          text: "Your payment could not be processed. Please try again.",
+          confirmButtonText: "Okay",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-3xl p-8",
+            title: "text-2xl font-bold text-[#233D4D]",
+            htmlContainer: "text-sm text-[#233D4D]/60",
+            confirmButton:
+              "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
+          },
+        });
       },
 
       onClose: function () {
@@ -117,6 +157,94 @@ function MyBookings() {
     setPaymentLoading(null);
   }
 };
+
+  const getStatusStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-700";
+
+      case "approved":
+        return "bg-blue-100 text-blue-700";
+
+      case "on_rent":
+        return "bg-purple-100 text-purple-700";
+
+      case "returned":
+      case "completed":
+        return "bg-green-100 text-green-700";
+
+      case "cancelled":
+        return "bg-red-100 text-red-700";
+
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const handleCancelBooking = async (bookingId) => {
+    const result = await Swal.fire({
+      title: "Cancel this booking?",
+      text: "Are you sure you want to cancel this booking?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, cancel booking",
+      cancelButtonText: "No, keep it",
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        popup: "rounded-3xl p-8",
+        title: "text-2xl font-bold text-[#233D4D]",
+        htmlContainer: "text-sm text-[#233D4D]/60",
+        confirmButton:
+          "rounded-xl bg-red-500 px-5 py-3 font-semibold text-white transition hover:bg-red-600",
+        cancelButton:
+          "rounded-xl border border-[#EAECF0] px-5 py-3 font-semibold text-[#233D4D] transition hover:bg-[#F8FAFC]",
+        actions: "flex gap-3",
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await apiClient.post(`/bookings/${bookingId}/cancel`);
+
+      setBookings((prevBookings) =>
+        prevBookings.filter(
+          (booking) => booking.id !== bookingId
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Booking cancelled",
+        text: "Your booking has been cancelled successfully.",
+        confirmButtonText: "Okay",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-3xl p-8",
+          title: "text-2xl font-bold text-[#233D4D]",
+          confirmButton:
+            "rounded-xl bg-[#FE7F2D] px-6 py-3 font-semibold text-white transition hover:bg-[#233D4D]",
+        },
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Cancellation failed",
+        text:
+          error.response?.data?.message ||
+          "Failed to cancel this booking.",
+        confirmButtonText: "Okay",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-3xl p-8",
+          title: "text-2xl font-bold text-[#233D4D]",
+          confirmButton:
+            "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
+        },
+      });
+    }
+  };
 
   return (
     <DashboardLayout menuItems={customerMenu} showCart={true}>
@@ -198,7 +326,11 @@ function MyBookings() {
                             </h2>
                           </div>
 
-                          <span className="shrink-0 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">
+                          <span
+                            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                              booking.status
+                            )}`}
+                          >
                             {booking.status}
                           </span>
                         </div>
@@ -247,7 +379,6 @@ function MyBookings() {
                     </div>
 
                     {/* Action */}
-                    {/* Action */}
                     <div className="flex items-center justify-between border-t border-[#233D4D]/10 px-4 py-3">
                       <button
                         type="button"
@@ -259,7 +390,47 @@ function MyBookings() {
                         View Equipment →
                       </button>
 
-                      {booking.status === "pending" && (
+                        <div className="flex items-center gap-3">
+                          {booking.status === "pending" && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleCancelBooking(booking.id)}
+                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                              >
+                                Cancel Booking
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handlePayment(booking.id)}
+                                disabled={paymentLoading === booking.id}
+                                className="rounded-xl bg-[#FE7F2D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {paymentLoading === booking.id
+                                  ? "Processing..."
+                                  : "Pay Now"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+
+                      {/* {booking.status === "pending" && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelBooking(booking.id)}
+                          disabled={cancellingId === booking.id}
+                          className="text-sm font-medium text-red-500 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {cancellingId === booking.id
+                            ? "Cancelling..."
+                            : "Cancel Booking"}
+                        </button>
+                      )} */}
+
+
+                      {/* {booking.status === "pending" && (
                         <button
                           type="button"
                           onClick={() => handlePayment(booking.id)}
@@ -270,7 +441,7 @@ function MyBookings() {
                             ? "Processing..."
                             : "Pay Now"}
                         </button>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 ))}

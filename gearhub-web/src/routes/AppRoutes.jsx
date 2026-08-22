@@ -9,6 +9,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminEquipments from "../pages/admin/AdminEquipments";
+import AdminBookings from "../pages/admin/AdminBookings";
 import AdminCategories from "../pages/admin/AdminCategories";
 import EquipmentDetail from "../pages/public/EquipmentDetail";
 import MyBookings from "../pages/user/MyBookings";
@@ -40,6 +41,7 @@ function AppRoutes() {
         <Route path="/admin/dashboard" element={<AdminDashboard />}/>
         <Route path="/admin/equipments" element={<AdminEquipments />}/>
         <Route path="/admin/categories" element={<AdminCategories />}/>
+        <Route path="/admin/bookings" element={<AdminBookings />}/>
       </Route>
     </Routes>
   );
