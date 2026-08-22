@@ -6,7 +6,7 @@ The application allows users to browse photography equipment, add items to a car
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 GearHub is designed to simplify the equipment rental process.
 
@@ -25,7 +25,7 @@ The system also provides role-based access for customers and administrators.
 
 ---
 
-## 🎯 Problem Statement
+## Problem Statement
 
 Equipment rental processes are often handled manually, making it difficult for customers to check equipment availability, calculate rental periods, manage bookings, and complete payments.
 
@@ -42,7 +42,7 @@ The application helps solve problems such as:
 
 ---
 
-## ✨ Features
+## Features
 
 ### Customer Features
 
@@ -71,7 +71,7 @@ The application helps solve problems such as:
 
 ---
 
-## 🔐 Authentication & Authorization
+## Authentication & Authorization
 
 GearHub uses authentication to verify user identity and authorization to control access based on user roles.
 
@@ -101,7 +101,7 @@ Users are redirected to different dashboards based on their role after login.
 
 ---
 
-## 💳 Payment Integration
+## Payment Integration
 
 GearHub integrates with **Midtrans Snap** for payment processing.
 
@@ -121,21 +121,18 @@ During local development, **ngrok** can be used to expose the Laravel applicatio
 
 ---
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Frontend
 
 - React
 - Vite
-- React Router
 - Tailwind CSS
-- Axios
-- SweetAlert2
+
 
 ### Backend
 
 - Laravel
-- Laravel Sanctum
 - PHP
 
 ### Database
@@ -148,23 +145,9 @@ During local development, **ngrok** can be used to expose the Laravel applicatio
 
 ### Development Tools
 
-- Git
 - GitHub
 - Postman
-- XAMPP
-- Composer
-- npm
 - ngrok
 
 ---
 
-# 📂 Project Structure
-
-This project consists of two main applications:
-
-```text
-GearHub
-│
-├── gearhub-web/          # React Frontend
-│
-└── gearhub-api/          # Laravel Backend
