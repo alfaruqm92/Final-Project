@@ -10,12 +10,13 @@ use App\Models\Equipment;
 class EquipmentController extends Controller
 {
 
-    public function index(){
+    public function index()
+    {
         $equipments = Equipment::with('category')->get();
 
         $equipments->transform(function ($equipment) {
             $equipment->image = $equipment->image
-                ? url(Storage::url('equipments/' . $equipment->image))
+                ? rtrim(config('app.url'), '/') . Storage::url('equipments/' . $equipment->image)
                 : null;
 
             return $equipment;
