@@ -76,6 +76,36 @@ function MyBookings() {
 
     console.log("Snap Token:", snapToken);
 
+    if (!window.snap) {
+      throw new Error("Midtrans Snap is not loaded.");
+    }
+
+    window.snap.pay(snapToken, {
+      onSuccess: function (result) {
+        console.log("Payment success:", result);
+
+        alert("Payment successful!");
+
+        navigate("/my-bookings");
+      },
+
+      onPending: function (result) {
+        console.log("Payment pending:", result);
+
+        alert("Payment is pending. Please complete your payment.");
+      },
+
+      onError: function (result) {
+        console.error("Payment error:", result);
+
+        alert("Payment failed. Please try again.");
+      },
+
+      onClose: function () {
+        console.log("Payment popup closed");
+      },
+    });
+
   } catch (error) {
     console.error("Failed to create payment:", error);
 

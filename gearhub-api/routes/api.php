@@ -19,6 +19,8 @@ Route::get('/equipments/{equipment}', [EquipmentController::class, 'show']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::post('/payments/notification', [PaymentController::class, 'notification']);
+
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
 

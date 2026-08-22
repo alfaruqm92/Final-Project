@@ -8,12 +8,11 @@ use App\Models\Payment;
 use App\Models\Booking;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         $payments = Payment::all();
@@ -24,9 +23,7 @@ class PaymentController extends Controller
         ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -77,9 +74,6 @@ class PaymentController extends Controller
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $payment = Payment::find($id);
@@ -98,9 +92,7 @@ class PaymentController extends Controller
         ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(Request $request, string $id)
     {
         $payment = Payment::find($id);
@@ -158,5 +150,79 @@ class PaymentController extends Controller
             'message' => 'Attention! Something must be filled in the form',
             'errors' => $validator->errors(),
         ], 422);
+    }
+
+    public function notification(Request $request)
+    {
+        Log::info('Midtrans notification received', $request->all());
+
+        $orderId = $request->input('order_id');
+        $statusCode = $request->input('status_code');
+        $grossAmount = $request->input('gross_amount');
+        $signatureKey = $request->input('signature_key');
+        $transactionStatus = $request->input('transaction_status');
+        $transactionId = $request->input('transaction_id');
+
+        $serverKey = config('services.midtrans.server_key');
+
+        $expectedSignature = hash(
+            'sha512',
+            $orderId .
+            $statusCode .
+            $grossAmount .
+            $serverKey
+        );
+
+        if (!$signatureKey || !hash_equals($expectedSignature, $signatureKey)) {
+            Log::warning('Invalid Midtrans signature', [
+                'order_id' => $orderId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid signature.',
+            ], 403);
+        }
+
+        $payment = Payment::where('order_id', $orderId)->first();
+
+        if (!$payment) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification received, but payment was not found.',
+            ], 200);
+        }
+
+        $paymentStatus = $payment->status;
+
+        if (in_array($transactionStatus, ['capture', 'settlement'])) {
+            $paymentStatus = 'Completed';
+
+            $payment->booking->update([
+                'status' => 'approved',
+            ]);
+        } elseif ($transactionStatus === 'pending') {
+            $paymentStatus = 'Pending';
+        } elseif (
+            in_array($transactionStatus, [
+                'deny',
+                'cancel',
+                'expire',
+                'failure',
+            ])
+        ) {
+            $paymentStatus = 'Failed';
+        }
+
+        $payment->update([
+            'transaction_id' => $transactionId,
+            'payment_method' => $request->input('payment_type'),
+            'status' => $paymentStatus,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification processed successfully.',
+        ]);
     }
 }
