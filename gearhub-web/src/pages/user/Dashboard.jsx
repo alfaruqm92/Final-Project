@@ -5,11 +5,6 @@ import apiClient from "../../services/api/client";
 
 const customerMenu = [
   {
-    label: "Home",
-    path: "/",
-    icon: "home",
-  },
-  {
     label: "Dashboard",
     path: "/dashboard",
     icon: "dashboard",

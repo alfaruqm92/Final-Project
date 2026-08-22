@@ -7,11 +7,6 @@ import DashboardLayout from "../../components/templates/DashboardLayout";
 
 const customerMenu = [
   {
-    label: "Home",
-    path: "/",
-    icon: "home",
-  },
-  {
     label: "Dashboard",
     path: "/dashboard",
     icon: "dashboard",

@@ -18,7 +18,7 @@ const adminMenu = [
   {
     label: "Categories",
     path: "/admin/categories",
-    icon: "category",
+    icon: "list",
   },
   {
     label: "Bookings",

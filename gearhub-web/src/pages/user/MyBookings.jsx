@@ -9,11 +9,6 @@ import Swal from "sweetalert2";
 
 const customerMenu = [
   {
-    label: "Home",
-    path: "/",
-    icon: "home",
-  },
-  {
     label: "Dashboard",
     path: "/dashboard",
     icon: "dashboard",

@@ -7,6 +7,26 @@ import EmptyState from "../../components/molecules/EmptyState";
 import apiClient from "../../services/api/client";
 import LoadingState from "../../components/molecules/LoadingState";
 import PublicLayout from "../../components/templates/PublicLayout";
+import DashboardLayout from "../../components/templates/DashboardLayout";
+import { useAuth } from "../../contexts/AuthContext";
+
+const customerMenu = [
+  {
+    label: "Dashboard",
+    path: "/dashboard",
+    icon: "dashboard",
+  },
+  {
+    label: "Equipment",
+    path: "/equipment",
+    icon: "camera",
+  },
+  {
+    label: "My Bookings",
+    path: "/my-bookings",
+    icon: "calendar",
+  },
+];
 
 const categories = [
   {
@@ -29,6 +49,7 @@ const categories = [
 
 function Equipment() {
 
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
   const handleEquipmentClick = (equipment) => {
@@ -72,13 +93,18 @@ function Equipment() {
     fetchEquipments();
   }, []);
 
-  
+  const equipmentContent = (
+    <section
+      className={
+        isAuthenticated
+          ? "px-4 py-8 md:px-8"
+          : "px-4 pb-12 pt-28 md:px-8 md:pt-32"
+      }
+    >
+      <div className="mx-auto max-w-7xl">
 
-  return (
-    <PublicLayout>
-      <section className="px-4 pb-12 pt-28 md:px-8 md:pt-32">
-        <div className="mx-auto max-w-7xl">
-
+        {/* Back to Home hanya untuk guest */}
+        {!isAuthenticated && (
           <button
             type="button"
             onClick={() => navigate("/")}
@@ -87,65 +113,78 @@ function Equipment() {
             <Icon name="circlearrowleft" size={16} />
             Back to Home
           </button>
+        )}
 
-          {/* Header */}
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FE7F2D]">
-              Our Equipment
-            </p>
+        {/* Header */}
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FE7F2D]">
+            Our Equipment
+          </p>
 
-            <h1 className="mt-2 text-3xl font-bold text-[#000000] md:text-4xl">
-              Find the right gear
-            </h1>
+          <h1 className="mt-2 text-3xl font-bold text-[#000000] md:text-4xl">
+            Find the right gear
+          </h1>
 
-            <p className="mt-3 text-sm leading-6 text-[#233D4D]/60 md:text-base">
-              Explore our collection of professional cameras and photography
-              equipment for your next project.
-            </p>
-          </div>
-
-          {/* Search */}
-          <div className="mt-7 max-w-xl">
-            <SearchBar
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {/* Category */}
-          <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
-            {categories.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => setCategory(item.value)}
-                className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium transition-all duration-300 ease-out ${
-                  category === item.value
-                    ? "bg-[#233D4D] text-white shadow-sm"
-                    : "bg-white text-[#233D4D] hover:bg-[#233D4D]/10"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Equipment */}
-          <div className="mt-8">
-            {loading ? (
-              <LoadingState />
-            ) : filteredEquipments.length > 0 ? (
-              <EquipmentGrid
-                equipments={filteredEquipments}
-                onEquipmentClick={handleEquipmentClick}
-              />
-            ) : (
-              <EmptyState />
-            )}
-          </div>
-
+          <p className="mt-3 text-sm leading-6 text-[#233D4D]/60 md:text-base">
+            Explore our collection of professional cameras and photography
+            equipment for your next project.
+          </p>
         </div>
-      </section>
+
+        {/* Search */}
+        <div className="mt-7 max-w-xl">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Category */}
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
+          {categories.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setCategory(item.value)}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium transition-all duration-300 ease-out ${
+                category === item.value
+                  ? "bg-[#233D4D] text-white shadow-sm"
+                  : "bg-white text-[#233D4D] hover:bg-[#233D4D]/10"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Equipment */}
+        <div className="mt-8">
+          {loading ? (
+            <LoadingState />
+          ) : filteredEquipments.length > 0 ? (
+            <EquipmentGrid
+              equipments={filteredEquipments}
+              onEquipmentClick={handleEquipmentClick}
+            />
+          ) : (
+            <EmptyState />
+          )}
+        </div>
+
+      </div>
+    </section>
+  );
+
+  return isAuthenticated ? (
+    <DashboardLayout
+      menuItems={customerMenu}
+      showCart={true}
+    >
+      {equipmentContent}
+    </DashboardLayout>
+  ) : (
+    <PublicLayout>
+      {equipmentContent}
     </PublicLayout>
   );
 }
