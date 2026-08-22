@@ -56,7 +56,7 @@ function Checkout() {
 
   if (cartItems.length === 0) {
     return (
-      <DashboardLayout menuItems={customerMenu}>
+      <DashboardLayout menuItems={customerMenu} showCart={true}>
         <div className="px-4 py-8 md:px-8">
           <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 text-center shadow-sm">
             <h1 className="text-2xl font-bold text-[#233D4D]">
@@ -81,7 +81,7 @@ function Checkout() {
   }
 
   return (
-    <DashboardLayout menuItems={customerMenu}>
+    <DashboardLayout menuItems={customerMenu} showCart={true}>
       <div className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-5xl">
           <p className="text-sm font-medium uppercase tracking-wider text-[#FE7F2D]">
@@ -114,6 +114,7 @@ function Checkout() {
                     <input
                       type="date"
                       value={pickupDate}
+                      min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => setPickupDate(e.target.value)}
                       className="w-full rounded-xl border border-[#EAECF0] px-4 py-3 text-sm outline-none transition focus:border-[#FE7F2D]"
                     />
