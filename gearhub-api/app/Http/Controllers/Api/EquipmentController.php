@@ -15,9 +15,12 @@ class EquipmentController extends Controller
         $equipments = Equipment::with('category')->get();
 
         $equipments->transform(function ($equipment) {
-            $equipment->image = $equipment->image
-                ? rtrim(config('app.url'), '/') . Storage::url('equipments/' . $equipment->image)
-                : null;
+        $equipment->image = $equipment->image
+            ? config('app.url') . Storage::url(
+                'equipments/' . $equipment->image
+            )
+            : null;
+
 
             return $equipment;
         });
@@ -71,7 +74,7 @@ class EquipmentController extends Controller
         }
 
         $equipment->image = $equipment->image
-        ? url(Storage::url('equipments/' . $equipment->image))
+        ? config('app.url') . Storage::url('equipments/' . $equipment->image)
         : null;
 
         return response()->json([
@@ -81,9 +84,6 @@ class EquipmentController extends Controller
         ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $equipment = Equipment::find($id);
