@@ -15,12 +15,9 @@ class EquipmentController extends Controller
         $equipments = Equipment::with('category')->get();
 
         $equipments->transform(function ($equipment) {
-        $equipment->image = $equipment->image
-            ? config('app.url') . Storage::url(
-                'equipments/' . $equipment->image
-            )
-            : null;
-
+            $equipment->image = $equipment->image
+                ? url('equipments/' . $equipment->image)
+                : null;
 
             return $equipment;
         });
@@ -74,8 +71,8 @@ class EquipmentController extends Controller
         }
 
         $equipment->image = $equipment->image
-        ? config('app.url') . Storage::url('equipments/' . $equipment->image)
-        : null;
+            ? url('equipments/' . $equipment->image)
+            : null;
 
         return response()->json([
             'success' => true,
