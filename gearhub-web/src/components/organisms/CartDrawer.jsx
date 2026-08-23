@@ -71,7 +71,7 @@ function CartDrawer({ isOpen, onClose }) {
 
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => navigate("/equipment")}
                 className="mt-6 rounded-xl bg-[#FE7F2D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#233D4D]"
               >
                 Browse Equipment
