@@ -54,8 +54,10 @@ function Dashboard() {
   ).length;
 
   // Equipment yang sedang dipinjam
-  const rentedBookings = bookings.filter(
-    (booking) => booking.status?.toLowerCase() === "on_rent"
+  const rentedBookings = bookings.filter((booking) =>
+    ["approved", "on_rent"].includes(
+      booking.status?.toLowerCase()
+    )
   );
 
   // Hitung sisa hari rental
