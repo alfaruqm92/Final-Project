@@ -9,6 +9,7 @@ use App\Models\Equipment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -26,113 +27,123 @@ class BookingController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'equipment_ids' => 'required|array|min:1',
-            'equipment_ids.*' => 'required|exists:equipments,id',
-            'pickup_date' => 'required|date|after_or_equal:today',
-            'return_date' => 'required|date|after:pickup_date',
-        ]);
+{
+    $validated = $request->validate([
+        'equipment_ids' => 'required|array|min:1',
+        'equipment_ids.*' => 'required|exists:equipments,id',
+        'pickup_date' => 'required|date|after_or_equal:today',
+        'return_date' => 'required|date|after:pickup_date',
+    ]);
 
-        $equipments = Equipment::whereIn(
-            'id',
-            $validated['equipment_ids']
-        )->get();
+    $equipments = Equipment::whereIn(
+        'id',
+        $validated['equipment_ids']
+    )->get();
 
-        $unavailableEquipment = $equipments->first(function ($equipment) {
-            return strtolower($equipment->status) !== 'available';
-        });
+    $unavailableEquipment = $equipments->first(function ($equipment) {
+        return strtolower($equipment->status) !== 'available';
+    });
 
-        if ($unavailableEquipment) {
+    if ($unavailableEquipment) {
+        return response()->json([
+            'success' => false,
+            'message' => "{$unavailableEquipment->brand} {$unavailableEquipment->model} is not available for booking.",
+        ], 422);
+    }
+
+    $totalDays = Carbon::parse(
+        $validated['pickup_date']
+    )->diffInDays(
+        Carbon::parse($validated['return_date'])
+    );
+
+    foreach ($equipments as $equipment) {
+        $hasConflict = Booking::where(
+            'equipment_id',
+            $equipment->id
+        )
+            ->whereIn('status', [
+                'pending',
+                'approved',
+                'on_rent',
+            ])
+            ->where(function ($query) use ($validated) {
+                $query->whereBetween(
+                    'pickup_date',
+                    [
+                        $validated['pickup_date'],
+                        $validated['return_date'],
+                    ]
+                )
+                ->orWhereBetween(
+                    'return_date',
+                    [
+                        $validated['pickup_date'],
+                        $validated['return_date'],
+                    ]
+                )
+                ->orWhere(function ($query) use ($validated) {
+                    $query->where(
+                        'pickup_date',
+                        '<=',
+                        $validated['pickup_date']
+                    )
+                    ->where(
+                        'return_date',
+                        '>=',
+                        $validated['return_date']
+                    );
+                });
+            })
+            ->exists();
+
+        if ($hasConflict) {
             return response()->json([
                 'success' => false,
-                'message' => "{$unavailableEquipment->brand} {$unavailableEquipment->model} is not available for booking.",
+                'message' => "{$equipment->brand} {$equipment->model} is already booked for the selected dates.",
             ], 422);
         }
-
-        $totalDays = Carbon::parse(
-            $validated['pickup_date']
-        )->diffInDays(
-            Carbon::parse($validated['return_date'])
-        );
-
-        foreach ($equipments as $equipment) {
-            $hasConflict = Booking::where(
-                'equipment_id',
-                $equipment->id
-            )
-                ->whereIn('status', [
-                    'pending',
-                    'approved',
-                    'on_rent',
-                ])
-                ->where(function ($query) use ($validated) {
-                    $query->whereBetween(
-                        'pickup_date',
-                        [
-                            $validated['pickup_date'],
-                            $validated['return_date'],
-                        ]
-                    )
-                    ->orWhereBetween(
-                        'return_date',
-                        [
-                            $validated['pickup_date'],
-                            $validated['return_date'],
-                        ]
-                    )
-                    ->orWhere(function ($query) use ($validated) {
-                        $query->where(
-                            'pickup_date',
-                            '<=',
-                            $validated['pickup_date']
-                        )
-                        ->where(
-                            'return_date',
-                            '>=',
-                            $validated['return_date']
-                        );
-                    });
-                })
-                ->exists();
-
-            if ($hasConflict) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "{$equipment->brand} {$equipment->model} is already booked for the selected dates.",
-                ], 422);
-            }
-        }
-
-        $bookings = DB::transaction(function () use (
-            $request,
-            $equipments,
-            $validated,
-            $totalDays
-        ) {
-            return $equipments->map(function ($equipment) use (
-                $request,
-                $validated,
-                $totalDays
-            ) {
-                return Booking::create([
-                    'user_id' => $request->user()->id,
-                    'equipment_id' => $equipment->id,
-                    'pickup_date' => $validated['pickup_date'],
-                    'return_date' => $validated['return_date'],
-                    'total_days' => $totalDays,
-                    'total_price' => $equipment->price_per_day * $totalDays,
-                    'status' => 'pending',
-                ]);
-            });
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Bookings created successfully',
-            'data' => $bookings,
-        ], 201);
     }
+
+    // Satu ID untuk seluruh equipment dalam satu checkout
+    $bookingGroupId = 'GH-' . strtoupper(Str::random(10));
+
+    $bookings = DB::transaction(function () use (
+        $request,
+        $equipments,
+        $validated,
+        $totalDays,
+        $bookingGroupId
+    ) {
+        return $equipments->map(function ($equipment) use (
+            $request,
+            $validated,
+            $totalDays,
+            $bookingGroupId
+        ) {
+            return Booking::create([
+                'booking_group_id' => $bookingGroupId,
+                'user_id' => $request->user()->id,
+                'equipment_id' => $equipment->id,
+                'pickup_date' => $validated['pickup_date'],
+                'return_date' => $validated['return_date'],
+                'total_days' => $totalDays,
+                'total_price' =>
+                    $equipment->price_per_day * $totalDays,
+                'status' => 'pending',
+            ]);
+        });
+    });
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Bookings created successfully',
+        'data' => [
+            'booking_group_id' => $bookingGroupId,
+            'bookings' => $bookings,
+        ],
+    ], 201);
+}
 
     public function show(string $id)
     {

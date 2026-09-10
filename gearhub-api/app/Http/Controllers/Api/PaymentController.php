@@ -25,54 +25,62 @@ class PaymentController extends Controller
 
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'booking_id' => 'required|exists:bookings,id',
-        ]);
+{
+    $validated = $request->validate([
+        'booking_group_id' => 'required|string|exists:bookings,booking_group_id',
+    ]);
 
-        $booking = Booking::findOrFail($validated['booking_id']);
+    $bookings = Booking::where(
+        'booking_group_id',
+        $validated['booking_group_id']
+    )
+        ->where('user_id', $request->user()->id)
+        ->get();
 
-        if ($booking->user_id !== $request->user()->id) {
-            return response()->json([
-            'success' => false,
-            'message' => 'You are not authorized to pay this booking.',
-        ], 403);
-        }
-
-        $amount = $booking->total_price;
-
-        $orderId = 'GH-' . $booking->id . '-' . time();
-
-        $payment = Payment::create([
-            'booking_id' => $booking->id,
-            'order_id' => $orderId,
-            'amount' => $amount,
-            'status' => 'Pending',
-        ]);
-
-        Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
-
-        $params = [
-            'transaction_details' => [
-                'order_id' => $orderId,
-                'gross_amount' => $amount,
-            ]
-        ];
-
-        $snapToken = Snap::getSnapToken($params);
-
+    if ($bookings->isEmpty()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Payment created successfully',
-            'data' => [
-                'payment' => $payment,
-                'snap_token' => $snapToken,
-            ],
-        ], 201);
+            'success' => false,
+            'message' => 'You are not authorized to pay these bookings.',
+        ], 403);
     }
+
+    $amount = $bookings->sum('total_price');
+
+    $orderId = $validated['booking_group_id'] . '-' . time();
+
+    $payment = Payment::create([
+        // Gunakan booking pertama sebagai referensi
+        // karena tabel payments saat ini masih memakai booking_id
+        'booking_id' => $bookings->first()->id,
+        'order_id' => $orderId,
+        'amount' => $amount,
+        'status' => 'Pending',
+    ]);
+
+    Config::$serverKey = config('services.midtrans.server_key');
+    Config::$isProduction = config('services.midtrans.is_production');
+    Config::$isSanitized = true;
+    Config::$is3ds = true;
+
+    $params = [
+        'transaction_details' => [
+            'order_id' => $orderId,
+            'gross_amount' => (int) $amount,
+        ],
+    ];
+
+    $snapToken = Snap::getSnapToken($params);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Payment created successfully',
+        'data' => [
+            'payment' => $payment,
+            'snap_token' => $snapToken,
+            'booking_group_id' => $validated['booking_group_id'],
+        ],
+    ], 201);
+}
 
     public function show(string $id)
     {
@@ -195,25 +203,18 @@ class PaymentController extends Controller
 
         $paymentStatus = $payment->status;
 
-        if (in_array($transactionStatus, ['capture', 'settlement'])) {
+       if (in_array($transactionStatus, ['capture', 'settlement'])) {
             $paymentStatus = 'Completed';
 
-            $payment->booking->update([
+            $bookingGroupId = $payment->booking->booking_group_id;
+
+            Booking::where(
+                'booking_group_id',
+                $bookingGroupId
+            )->update([
                 'status' => 'approved',
             ]);
-        } elseif ($transactionStatus === 'pending') {
-            $paymentStatus = 'Pending';
-        } elseif (
-            in_array($transactionStatus, [
-                'deny',
-                'cancel',
-                'expire',
-                'failure',
-            ])
-        ) {
-            $paymentStatus = 'Failed';
         }
-
         $payment->update([
             'transaction_id' => $transactionId,
             'payment_method' => $request->input('payment_type'),

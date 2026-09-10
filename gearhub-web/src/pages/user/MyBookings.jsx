@@ -57,101 +57,108 @@ function MyBookings() {
     fetchBookings();
   }, []);
 
-  const handlePayment = async (bookingId) => {
-  try {
-    setPaymentLoading(bookingId);
-    setError("");
+  // Gabungkan booking berdasarkan booking_group_id
+  const groupedBookings = Object.values(
+    bookings.reduce((groups, booking) => {
+      const groupId = booking.booking_group_id || `single-${booking.id}`;
 
-    const response = await apiClient.post("/payments", {
-      booking_id: bookingId,
-    });
+      if (!groups[groupId]) {
+        groups[groupId] = {
+          booking_group_id: groupId,
+          bookings: [],
+          total_price: 0,
+          pickup_date: booking.pickup_date,
+          return_date: booking.return_date,
+          total_days: booking.total_days,
+          status: booking.status,
+        };
+      }
 
-    console.log(response.data);
+      groups[groupId].bookings.push(booking);
+      groups[groupId].total_price += Number(booking.total_price || 0);
 
-    const snapToken = response.data.data.snap_token;
+      return groups;
+    }, {})
+  );
 
-    console.log("Snap Token:", snapToken);
+  const handlePayment = async (bookingGroupId) => {
+    try {
+      setPaymentLoading(bookingGroupId);
+      setError("");
 
-    if (!window.snap) {
-      throw new Error("Midtrans Snap is not loaded.");
-    }
-
-    window.snap.pay(snapToken, {
-      onSuccess: async function (result) {
-        console.log("Payment success:", result);
-
-        await Swal.fire({
-        icon: "success",
-        title: "Payment successful!",
-        text: "Your payment has been completed successfully.",
-        confirmButtonText: "View My Bookings",
-        buttonsStyling: false,
-        customClass: {
-          popup: "rounded-3xl p-8",
-          title: "text-2xl font-bold text-[#233D4D]",
-          htmlContainer: "text-sm text-[#233D4D]/60",
-          confirmButton:
-            "rounded-xl bg-[#FE7F2D] px-6 py-3 font-semibold text-white transition hover:bg-[#233D4D]",
-        },
+      const response = await apiClient.post("/payments", {
+        booking_group_id: bookingGroupId,
       });
 
-        window.location.reload();
-      },
+      const snapToken = response.data.data.snap_token;
 
-      onPending: function (result) {
-        console.log("Payment pending:", result);
+      if (!window.snap) {
+        throw new Error("Midtrans Snap is not loaded.");
+      }
 
-        Swal.fire({
-          icon: "info",
-          title: "Payment pending",
-          text: "Your payment is still waiting to be completed.",
-          confirmButtonText: "Okay",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-3xl p-8",
-            title: "text-2xl font-bold text-[#233D4D]",
-            htmlContainer: "text-sm text-[#233D4D]/60",
-            confirmButton:
-              "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
-          },
-        });
-      },
+      window.snap.pay(snapToken, {
+        onSuccess: async function () {
+          await Swal.fire({
+            icon: "success",
+            title: "Payment successful!",
+            text: "Your payment has been completed successfully.",
+            confirmButtonText: "View My Bookings",
+            buttonsStyling: false,
+            customClass: {
+              popup: "rounded-3xl p-8",
+              title: "text-2xl font-bold text-[#233D4D]",
+              htmlContainer: "text-sm text-[#233D4D]/60",
+              confirmButton:
+                "rounded-xl bg-[#FE7F2D] px-6 py-3 font-semibold text-white transition hover:bg-[#233D4D]",
+            },
+          });
 
-      onError: function (result) {
-        console.error("Payment error:", result);
+          window.location.reload();
+        },
 
-        Swal.fire({
-          icon: "error",
-          title: "Payment failed",
-          text: "Your payment could not be processed. Please try again.",
-          confirmButtonText: "Okay",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-3xl p-8",
-            title: "text-2xl font-bold text-[#233D4D]",
-            htmlContainer: "text-sm text-[#233D4D]/60",
-            confirmButton:
-              "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
-          },
-        });
-      },
+        onPending: function () {
+          Swal.fire({
+            icon: "info",
+            title: "Payment pending",
+            text: "Your payment is still waiting to be completed.",
+            confirmButtonText: "Okay",
+            buttonsStyling: false,
+            customClass: {
+              popup: "rounded-3xl p-8",
+              title: "text-2xl font-bold text-[#233D4D]",
+              confirmButton:
+                "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
+            },
+          });
+        },
 
-      onClose: function () {
-        console.log("Payment popup closed");
-      },
-    });
+        onError: function () {
+          Swal.fire({
+            icon: "error",
+            title: "Payment failed",
+            text: "Your payment could not be processed. Please try again.",
+            confirmButtonText: "Okay",
+            buttonsStyling: false,
+            customClass: {
+              popup: "rounded-3xl p-8",
+              title: "text-2xl font-bold text-[#233D4D]",
+              confirmButton:
+                "rounded-xl bg-[#233D4D] px-6 py-3 font-semibold text-white",
+            },
+          });
+        },
+      });
+    } catch (error) {
+      console.error("Failed to create payment:", error);
 
-  } catch (error) {
-    console.error("Failed to create payment:", error);
-
-    setError(
-      error.response?.data?.message ||
-      "Failed to create payment. Please try again."
-    );
-  } finally {
-    setPaymentLoading(null);
-  }
-};
+      setError(
+        error.response?.data?.message ||
+          "Failed to create payment. Please try again."
+      );
+    } finally {
+      setPaymentLoading(null);
+    }
+  };
 
   const getStatusStyle = (status) => {
     switch (status?.toLowerCase()) {
@@ -176,10 +183,10 @@ function MyBookings() {
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
+  const handleCancelBooking = async (group) => {
     const result = await Swal.fire({
       title: "Cancel this booking?",
-      text: "Are you sure you want to cancel this booking?",
+      text: "All equipment in this booking will be cancelled.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, cancel booking",
@@ -191,9 +198,9 @@ function MyBookings() {
         title: "text-2xl font-bold text-[#233D4D]",
         htmlContainer: "text-sm text-[#233D4D]/60",
         confirmButton:
-          "rounded-xl bg-red-500 px-5 py-3 font-semibold text-white transition hover:bg-red-600",
+          "rounded-xl bg-red-500 px-5 py-3 font-semibold text-white",
         cancelButton:
-          "rounded-xl border border-[#EAECF0] px-5 py-3 font-semibold text-[#233D4D] transition hover:bg-[#F8FAFC]",
+          "rounded-xl border border-[#EAECF0] px-5 py-3 font-semibold text-[#233D4D]",
         actions: "flex gap-3",
       },
     });
@@ -201,28 +208,36 @@ function MyBookings() {
     if (!result.isConfirmed) return;
 
     try {
-      await apiClient.post(`/bookings/${bookingId}/cancel`);
+      // Untuk sementara cancel setiap booking dalam group
+      await Promise.all(
+        group.bookings.map((booking) =>
+          apiClient.post(`/bookings/${booking.id}/cancel`)
+        )
+      );
 
       setBookings((prevBookings) =>
         prevBookings.filter(
-          (booking) => booking.id !== bookingId
+          (booking) =>
+            booking.booking_group_id !== group.booking_group_id
         )
       );
 
       Swal.fire({
         icon: "success",
         title: "Booking cancelled",
-        text: "Your booking has been cancelled successfully.",
+        text: "All equipment in this booking has been cancelled.",
         confirmButtonText: "Okay",
         buttonsStyling: false,
         customClass: {
           popup: "rounded-3xl p-8",
           title: "text-2xl font-bold text-[#233D4D]",
           confirmButton:
-            "rounded-xl bg-[#FE7F2D] px-6 py-3 font-semibold text-white transition hover:bg-[#233D4D]",
+            "rounded-xl bg-[#FE7F2D] px-6 py-3 font-semibold text-white",
         },
       });
     } catch (error) {
+      console.error("Cancellation failed:", error);
+
       Swal.fire({
         icon: "error",
         title: "Cancellation failed",
@@ -261,7 +276,6 @@ function MyBookings() {
             </p>
           </div>
 
-          {/* Content */}
           <div className="mt-8">
             {loading ? (
               <LoadingState />
@@ -269,7 +283,7 @@ function MyBookings() {
               <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
                 {error}
               </div>
-            ) : bookings.length === 0 ? (
+            ) : groupedBookings.length === 0 ? (
               <div className="rounded-3xl bg-white p-8">
                 <EmptyState />
 
@@ -284,160 +298,161 @@ function MyBookings() {
                 </div>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {bookings.map((booking) => (
+              <div className="grid gap-6 lg:grid-cols-2">
+                {groupedBookings.map((group) => (
                   <div
-                    key={booking.id}
+                    key={group.booking_group_id}
                     className="overflow-hidden rounded-2xl bg-white shadow-sm"
                   >
-                    <div className="flex gap-4 p-4">
+                    {/* Group Header */}
+                    <div className="flex items-center justify-between border-b border-[#EAECF0] px-5 py-4">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wider text-[#233D4D]/50">
+                          Booking
+                        </p>
 
-                      {/* Equipment Image */}
-                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#EAECF0]">
-                        {booking.equipment?.image ? (
-                          <img
-                            src={booking.equipment.image}
-                            alt={`${booking.equipment.brand} ${booking.equipment.model}`}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-xs text-[#233D4D]/40">
-                            No Image
-                          </div>
-                        )}
+                        <h2 className="mt-1 font-bold text-[#233D4D]">
+                          {group.booking_group_id}
+                        </h2>
                       </div>
 
-                      {/* Booking Info */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusStyle(
+                          group.status
+                        )}`}
+                      >
+                        {group.status}
+                      </span>
+                    </div>
+
+                    {/* Equipment List */}
+                    <div className="divide-y divide-[#EAECF0]">
+                      {group.bookings.map((booking) => (
+                        <div
+                          key={booking.id}
+                          className="flex gap-4 p-5"
+                        >
+                          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#EAECF0]">
+                            {booking.equipment?.image ? (
+                              <img
+                                src={booking.equipment.image}
+                                alt={`${booking.equipment.brand} ${booking.equipment.model}`}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-[#233D4D]/40">
+                                No Image
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium uppercase tracking-wide text-[#FE7F2D]">
-                              {booking.equipment?.category?.name || "Equipment"}
+                              {booking.equipment?.category?.name ||
+                                "Equipment"}
                             </p>
 
-                            <h2 className="mt-1 truncate font-bold text-[#233D4D]">
+                            <h3 className="mt-1 font-bold text-[#233D4D]">
                               {booking.equipment?.brand}{" "}
                               {booking.equipment?.model}
-                            </h2>
-                          </div>
+                            </h3>
 
-                          <span
-                            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
-                              booking.status
-                            )}`}
-                          >
-                            {booking.status}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <p className="text-[#233D4D]/50">
-                              Pickup
-                            </p>
-                            <p className="mt-1 font-medium text-[#233D4D]">
-                              {booking.pickup_date}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-[#233D4D]/50">
-                              Return
-                            </p>
-                            <p className="mt-1 font-medium text-[#233D4D]">
-                              {booking.return_date}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-[#233D4D]/50">
-                              Duration
-                            </p>
-                            <p className="mt-1 font-medium text-[#233D4D]">
-                              {booking.total_days} days
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-[#233D4D]/50">
-                              Total
-                            </p>
-                            <p className="mt-1 font-bold text-[#233D4D]">
+                            <p className="mt-2 text-sm font-semibold text-[#FE7F2D]">
                               Rp{" "}
                               {Number(
                                 booking.total_price
                               ).toLocaleString("id-ID")}
                             </p>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(
+                                  `/equipment/${booking.equipment_id}`
+                                )
+                              }
+                              className="mt-2 text-xs font-medium text-[#233D4D]/60 transition hover:text-[#FE7F2D]"
+                            >
+                              View Equipment →
+                            </button>
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* Booking Information */}
+                    <div className="border-t border-[#EAECF0] bg-[#F8FAFC] p-5">
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-xs text-[#233D4D]/50">
+                            Pickup
+                          </p>
+                          <p className="mt-1 font-medium text-[#233D4D]">
+                            {group.pickup_date}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-[#233D4D]/50">
+                            Return
+                          </p>
+                          <p className="mt-1 font-medium text-[#233D4D]">
+                            {group.return_date}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-[#233D4D]/50">
+                            Duration
+                          </p>
+                          <p className="mt-1 font-medium text-[#233D4D]">
+                            {group.total_days} days
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 flex items-center justify-between border-t border-[#EAECF0] pt-4">
+                        <span className="font-semibold text-[#233D4D]">
+                          Total Price
+                        </span>
+
+                        <span className="text-xl font-bold text-[#FE7F2D]">
+                          Rp {group.total_price.toLocaleString("id-ID")}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Action */}
-                    <div className="flex items-center justify-between border-t border-[#233D4D]/10 px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(`/equipment/${booking.equipment_id}`)
-                        }
-                        className="text-sm font-medium text-[#FE7F2D] transition hover:text-[#233D4D]"
-                      >
-                        View Equipment →
-                      </button>
-
-                        <div className="flex items-center gap-3">
-                          {booking.status === "pending" && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => handleCancelBooking(booking.id)}
-                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
-                              >
-                                Cancel Booking
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handlePayment(booking.id)}
-                                disabled={paymentLoading === booking.id}
-                                className="rounded-xl bg-[#FE7F2D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {paymentLoading === booking.id
-                                  ? "Processing..."
-                                  : "Pay Now"}
-                              </button>
-                            </>
-                          )}
-                        </div>
-
-
-                      {/* {booking.status === "pending" && (
+                    {/* Actions */}
+                    {group.status === "pending" && (
+                      <div className="flex items-center justify-end gap-3 border-t border-[#EAECF0] px-5 py-4">
                         <button
                           type="button"
-                          onClick={() => handleCancelBooking(booking.id)}
-                          disabled={cancellingId === booking.id}
-                          className="text-sm font-medium text-red-500 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          onClick={() =>
+                            handleCancelBooking(group)
+                          }
+                          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-50"
                         >
-                          {cancellingId === booking.id
-                            ? "Cancelling..."
-                            : "Cancel Booking"}
+                          Cancel Booking
                         </button>
-                      )} */}
 
-
-                      {/* {booking.status === "pending" && (
                         <button
                           type="button"
-                          onClick={() => handlePayment(booking.id)}
-                          disabled={paymentLoading === booking.id}
-                          className="rounded-xl bg-[#FE7F2D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={() =>
+                            handlePayment(group.booking_group_id)
+                          }
+                          disabled={
+                            paymentLoading ===
+                            group.booking_group_id
+                          }
+                          className="rounded-xl bg-[#FE7F2D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#233D4D] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {paymentLoading === booking.id
+                          {paymentLoading ===
+                          group.booking_group_id
                             ? "Processing..."
                             : "Pay Now"}
                         </button>
-                      )} */}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
