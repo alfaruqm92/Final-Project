@@ -6,6 +6,7 @@ import apiClient from "../../services/api/client";
 import LoadingState from "../../components/molecules/LoadingState";
 import EmptyState from "../../components/molecules/EmptyState";
 import Swal from "sweetalert2";
+import { Camera } from "lucide-react";
 
 const customerMenu = [
   {
@@ -338,12 +339,24 @@ function MyBookings() {
                                 src={booking.equipment.image}
                                 alt={`${booking.equipment.brand} ${booking.equipment.model}`}
                                 className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                  e.currentTarget.nextElementSibling.style.display = "flex";
+                                }}
                               />
-                            ) : (
-                              <div className="flex h-full items-center justify-center text-xs text-[#233D4D]/40">
-                                No Image
-                              </div>
-                            )}
+                            ) : null}
+
+                            <div
+                              className={`${
+                                booking.equipment?.image ? "hidden" : "flex"
+                              } h-full w-full items-center justify-center`}
+                            >
+                              <Camera
+                                size={32}
+                                strokeWidth={1.5}
+                                className="text-[#233D4D]/30"
+                              />
+                            </div>
                           </div>
 
                           <div className="min-w-0 flex-1">
