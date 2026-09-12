@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/templates/DashboardLayout";
 import { useAuth } from "../../contexts/AuthContext";
 import apiClient from "../../services/api/client";
+import { Camera } from "lucide-react"
 
 const customerMenu = [
   {
@@ -33,6 +34,8 @@ function Dashboard() {
     const fetchBookings = async () => {
       try {
         const response = await apiClient.get("/my-bookings");
+
+        console.log("DASHBOARD BOOKINGS:", response.data.data);
 
         setBookings(response.data.data);
       } catch (error) {
@@ -228,18 +231,30 @@ function Dashboard() {
                       className="flex gap-4 rounded-xl border border-[#EAECF0] p-4"
                     >
                       {/* IMAGE */}
-                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#EAECF0]">
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#EAECF0]">
                         {booking.equipment?.image ? (
                           <img
                             src={booking.equipment.image}
                             alt={`${booking.equipment.brand} ${booking.equipment.model}`}
                             className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              e.currentTarget.nextElementSibling.style.display = "flex";
+                            }}
                           />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-xs text-[#233D4D]/40">
-                            No Image
-                          </div>
-                        )}
+                        ) : null}
+
+                        <div
+                          className={`${
+                            booking.equipment?.image ? "hidden" : "flex"
+                          } h-full w-full items-center justify-center`}
+                        >
+                          <Camera
+                            size={32}
+                            strokeWidth={1.5}
+                            className="text-[#233D4D]/30"
+                          />
+                        </div>
                       </div>
 
                       {/* INFO */}
