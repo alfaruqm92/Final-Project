@@ -1,4 +1,5 @@
 import Badge from "../atoms/Badge";
+import { Camera } from "lucide-react";
 
 function EquipmentCard({
   image,
@@ -21,11 +22,29 @@ function EquipmentCard({
         className="relative aspect-square overflow-hidden rounded-2xl bg-[#EAECF0] lg:aspect-[4/3]"
         onClick={onClick}
       >
-        <img
-          src={image}
-          alt={`${brand} ${model}`}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+        {image ? (
+          <img
+            src={image}
+            alt={`${brand} ${model}`}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.nextElementSibling.style.display = "flex";
+            }}
+          />
+        ) : null}
+
+        <div
+          className={`${
+            image ? "hidden" : "flex"
+          } h-full w-full items-center justify-center`}
+        >
+          <Camera
+            size={48}
+            strokeWidth={1.5}
+            className="text-[#233D4D]/30"
+          />
+        </div>
 
         {/* Status */}
         <div className="absolute left-3 top-3">
